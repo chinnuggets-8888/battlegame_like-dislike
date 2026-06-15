@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simultaneous Grammar Battle: Activity Arena</title>
+    <style>
+        :root {
+            --g1-color: #36c5f0;
+            --g1-bg: rgba(26, 37, 47, 0.85);
+            --g2-color: #ecb22e;
+            --g2-bg: rgba(31, 24, 10, 0.85);
+            --danger: #e01e5a;
+            --light: #f8f9fa;
+            --dark: #1d1c1d;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #111;
+            background-image: 
+                radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 40px),
+                radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 30px),
+                radial-gradient(white, rgba(255,255,255,.1) 2px, transparent 40px);
+            background-size: 550px 550px, 350px 350px, 250px 250px;
+            background-position: 0 0, 40px 60px, 130px 270px;
+            animation: backgroundScroll 20s linear infinite;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Animated Activities Background Overlay */
+        @keyframes backgroundScroll {
+            0% { background-position: 0 0, 40px 60px, 130px 270px; }
+            100% { background-position: 550px 550px, 390px 410px, 380px 820px; }
+        }
+
+        /* Ambient floating activity icons decoration */
+        .bg-deco {
+            position: absolute;
+            font-size: 5rem;
+            opacity: 0.08;
+            pointer-events: none;
+            user-select: none;
+            z-index: 1;
+            animation: floatAnim 8s ease-in-out infinite alternate;
+        }
+
+        @keyframes floatAnim {
+            0% { transform: translateY(0px) rotate(0deg); }
+            100% { transform: translateY(-30px) rotate(15deg); }
+        }
+
+        /* Split Screen Panels */
+        .panel {
+            flex: 1;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            padding: 30px 20px;
+            position: relative;
+            z-index: 2;
+            backdrop-filter: blur(4px);
+        }
+
+        #panel-g1 {
+            background: linear-gradient(to bottom, rgba(54, 197, 240, 0.15), var(--g1-bg));
+            border-right: 4px solid #000;
+        }
+        #panel-g1 h2 { color: var(--g1-color); text-shadow: 0 0 15px rgba(54, 197, 240, 0.4); }
+
+        #panel-g2 {
+            background: linear-gradient(to bottom, rgba(236, 178, 46, 0.15), var(--g2-bg));
+            border-left: 4px solid #000;
+        }
+        #panel-g2 h2 { color: var(--g2-color); text-shadow: 0 0 15px rgba(236, 178, 46, 0.4); }
+
+        h2 {
+            font-size: 2.8rem;
+            margin: 0 0 5px 0;
+            letter-spacing: 2px;
+        }
+
+        .stat-text {
+            color: #fff;
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+        }
+
+        .hp-bar-container {
+            width: 85%;
+            background: #333;
+            height: 24px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid #000;
+            margin-bottom: 25px;
+        }
+
+        .hp-bar {
+            height: 100%;
+            width: 100%;
+            transition: width 0.2s ease;
+        }
+        .g1-hp-fill { background-color: var(--g1-color); box-shadow: 0 0 10px var(--g1-color); }
+        .g2-hp-fill { background-color: var(--g2-color); box-shadow: 0 0 10px var(--g2-color); }
+
+        /* Gameplay Containers */
+        .gameplay-area {
+            width: 95%;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            text-align: center;
+        }
+
+        .timer-text {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: var(--danger);
+            margin-bottom: 5px;
+        }
+
+        .timer-bar-container {
+            width: 100%;
+            background: #eee;
+            height: 10px;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .timer-bar {
+            height: 100%;
+            background: var(--danger);
+            width: 100%;
+            transition: width 1s linear;
+        }
+
+        .question-box {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            min-height: 80px;
+            color: var(--dark);
+            line-height: 1.4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 16px 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            background-color: var(--light);
+            border: 3px solid #ddd;
+            transition: all 0.1s ease;
+            color: var(--dark);
+        }
+
+        .btn:hover {
+            background-color: #e9ecef;
+            transform: translateY(-2px);
+            border-color: #888;
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        /* Screen Flash Animations for feedback */
+        @keyframes flashCorrect {
+            0% { background-color: rgba(46, 204, 113, 0.4); }
+            100% { background-color: transparent; }
+        }
+        @keyframes flashIncorrect {
+            0% { background-color: rgba(231, 76, 60, 0.5); }
+            100% { background-color: transparent; }
+        }
+
+        .flash-good { animation: flashCorrect 0.4s ease-out; }
+        .flash-bad { animation: flashIncorrect 0.4s ease-out; }
+
+        /* Fullscreen Overlays */
+        #start-screen, #game-over-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 10, 10, 0.95);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            text-align: center;
+        }
+
+        .action-btn {
+            background-color: #007a5a;
+            color: white;
+            padding: 18px 60px;
+            font-size: 1.6rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 40px;
+            cursor: pointer;
+            margin-top: 30px;
+            box-shadow: 0 5px 20px rgba(0,122,90,0.5);
+        }
+        .action-btn:hover { background-color: #005a42; transform: scale(1.05); }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <!-- Ambient Activity Background Symbols -->
+    <div class="bg-deco" style="top: 10%; left: 5%; animation-delay: 0s;">⚽</div>
+    <div class="bg-deco" style="top: 70%; left: 15%; animation-delay: 1s;">🎨</div>
+    <div class="bg-deco" style="top: 40%; left: 25%; animation-delay: 2s;">📚</div>
+    <div class="bg-deco" style="top: 15%; left: 70%; animation-delay: 1.5s;">🎸</div>
+    <div class="bg-deco" style="top: 80%; left: 85%; animation-delay: 0.5s;">🎮</div>
+    <div class="bg-deco" style="top: 45%; left: 60%; animation-delay: 2.5s;">🍕</div>
+
+    <!-- LEFT PANEL: GROUP 1 -->
+    <div id="panel-g1" class="panel">
+        <h2>GROUP 1</h2>
+        <div class="stat-text">Progress: <span id="g1-progress">0</span>/20 | Score: <span id="g1-score">0</span></div>
+        <div class="hp-bar-container">
+            <div id="g1-hp" class="hp-bar g1-hp-fill"></div>
+        </div>
+
+        <div class="gameplay-area" id="area-g1">
+            <div class="timer-text" id="g1-timer">15s</div>
+            <div class="timer-bar-container">
+                <div class="timer-bar" id="g1-timer-bar"></div>
+            </div>
+            <div class="question-box" id="g1-question">Ready...</div>
+            <div class="options-grid" id="g1-options"></div>
+        </div>
+    </div>
+
+    <!-- RIGHT PANEL: GROUP 2 -->
+    <div id="panel-g2" class="panel">
+        <h2>GROUP 2</h2>
+        <div class="stat-text">Progress: <span id="g2-progress">0</span>/20 | Score: <span id="g2-score">0</span></div>
+        <div class="hp-bar-container">
+            <div id="g2-hp" class="hp-bar g2-hp-fill"></div>
+        </div>
+
+        <div class="gameplay-area" id="area-g2">
+            <div class="timer-text" id="g2-timer">15s</div>
+            <div class="timer-bar-container">
+                <div class="timer-bar" id="g2-timer-bar"></div>
+            </div>
+            <div class="question-box" id="g2-question">Ready...</div>
+            <div class="options-grid" id="g2-options"></div>
+        </div>
+    </div>
+
+    <!-- Start Screen -->
+    <div id="start-screen">
+        <h1 style="font-size: 3.8rem; color: #ecb22e; margin-bottom: 5px; text-shadow: 0 0 20px rgba(236,178,46,0.3);">⚔️ SIMULTANEOUS BATTLE ARENA ⚔️</h1>
+        <h3 style="color: #36c5f0; font-weight: 400; margin-top: 0;">Theme: Action Verbs & Gerunds</h3>
+        <p style="max-width: 700px; font-size: 1.3rem; line-height: 1.6; color: #ddd; padding: 0 20px;">
+            Both groups play <strong>at the same time</strong> on their side of the screen! 
+            Each deck contains 20 unique questions. Answer accurately before the 15-second clocks hit zero to preserve your health!
+        </p>
+        <button class="action-btn" onclick="startSimultaneousGame()">Engage Battle</button>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="game-over-screen" class="hidden">
+        <h1 style="font-size: 4.5rem; tracking: 2px;">BATTLE ENDED</h1>
+        <div id="winner-text" style="font-size: 2.8rem; margin: 20px 0; font-weight: bold;"></div>
+        <div id="final-stats" style="font-size: 1.6rem; line-height: 2; margin-bottom: 40px; color: #ccc;"></div>
+        <button class="action-btn" onclick="location.reload()">New Encounter</button>
+    </div>
+
+    <script>
+        // Web Audio Setup
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(type) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            if (type === 'correct') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.08); // A5
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+            } else {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(180, audioCtx.currentTime);
+                osc.frequency.linearRampToValueAtTime(90, audioCtx.currentTime + 0.2);
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+            }
+        }
+
+        // Sentence Decks
+        const g1Deck = [
+            { s: "I really enjoy ________ books on weekends.", c: ["reading", "read", "reads", "to reading"], a: "reading" },
+            { s: "She doesn't like ________ the dishes after dinner.", c: ["washing", "wash", "washes", "washed"], a: "washing" },
+            { s: "Do you like ________ to pop music?", c: ["listening", "listen", "listens", "listened"], a: "listening" },
+            { s: "He ________ like waking up early on Mondays.", c: ["doesn't", "don't", "isn't", "not"], a: "doesn't" },
+            { s: "They don't like ________ video games all night.", c: ["playing", "play", "plays", "played"], a: "playing" },
+            { s: "________ your brother like cooking Italian food?", c: ["Does", "Do", "Is", "Are"], a: "Does" },
+            { s: "We love ________ in the deep blue ocean.", c: ["swimming", "swim", "swims", "swimmingly"], a: "swimming" },
+            { s: "My sister ________ like cleaning her bedroom.", c: ["doesn't", "don't", "not", "isn't"], a: "doesn't" },
+            { s: "________ you like studying English grammar?", c: ["Do", "Does", "Are", "Is"], a: "Do" },
+            { s: "The cat likes ________ in sunny spots on the floor.", c: ["sleeping", "sleep", "sleeps", "slept"], a: "sleeping" },
+            { s: "You don't like ________ in long queues at the supermarket.", c: ["waiting", "wait", "waits", "to waiting"], a: "waiting" },
+            { s: "Does Emily like ________ horror movies?", c: ["watching", "watch", "watches", "watched"], a: "watching" },
+            { s: "I don't mind ________ my parents with the chores.", c: ["helping", "help", "helps", "helped"], a: "helping" },
+            { s: "He absolutely hates ________ his homework late.", c: ["doing", "do", "does", "did"], a: "doing" },
+            { s: "________ they like traveling to foreign countries?", c: ["Do", "Does", "Are", "Have"], a: "Do" },
+            { s: "We don't like ________ in heavy traffic jams.", c: ["driving", "drive", "drives", "droving"], a: "driving" },
+            { s: "She likes ________ beautiful pictures of nature.", c: ["painting", "paint", "paints", "painted"], a: "painting" },
+            { s: "Does your father ________ working in the garden?", c: ["like", "likes", "liking", "liked"], a: "like" },
+            { s: "Tom and Sarah like ________ modern salsa steps.", c: ["dancing", "dance", "dances", "danced"], a: "dancing" },
+            { s: "I ________ like eating raw onions.", c: ["don't", "doesn't", "am not", "no"], a: "don't" }
+        ];
+
+        const g2Deck = [
+            { s: "He really likes ________ yummy chocolate cakes.", c: ["baking", "bake", "bakes", "baked"], a: "baking" },
+            { s: "We don't like ________ in the cold winter rain.", c: ["running", "run", "runs", "ran"], a: "running" },
+            { s: "________ your mother like shopping online?", c: ["Does", "Do", "Is", "Has"], a: "Does" },
+            { s: "They enjoy ________ old stamps from around the world.", c: ["collecting", "collect", "collects", "collected"], a: "collecting" },
+            { s: "She ________ like going to the dentist.", c: ["doesn't", "don't", "isn't", "no"], a: "doesn't" },
+            { s: "Do you like ________ green tea in the morning?", c: ["drinking", "drink", "drinks", "drank"], a: "drinking" },
+            { s: "I don't like ________ early for appointments.", c: ["arriving", "arrive", "arrives", "arrived"], a: "arriving" },
+            { s: "________ he like playing the acoustic guitar?", c: ["Does", "Do", "Is", "Can"], a: "Does" },
+            { s: "My friends like ________ new clothes at the mall.", c: ["buying", "buy", "buys", "bought"], a: "buying" },
+            { s: "It doesn't like ________ with that noisy toy.", c: ["playing", "play", "plays", "played"], a: "playing" },
+            { s: "We ________ like watching scary documentaries.", c: ["don't", "doesn't", "not", "aren't"], a: "don't" },
+            { s: "Do they like ________ in a big apartment block?", c: ["living", "live", "lives", "lived"], a: "living" },
+            { s: "She loves ________ sweet songs in the school choir.", c: ["singing", "sing", "sings", "sang"], a: "singing" },
+            { s: "Does your sister ________ riding her bicycle?", c: ["like", "likes", "liking", "liked"], a: "like" },
+            { s: "I hate ________ text messages while walking.", c: ["typing", "type", "types", "typed"], a: "typing" },
+            { s: "He doesn't like ________ bad news on TV.", c: ["hearing", "hear", "hears", "heard"], a: "hearing" },
+            { s: "________ you like taking photos of your food?", c: ["Do", "Does", "Are", "Will"], a: "Do" },
+            { s: "My dogs like ________ after small tennis balls.", c: ["running", "run", "runs", "to running"], a: "running" },
+            { s: "They ________ like staying at cheap hotels.", c: ["don't", "doesn't", "no", "not"], a: "don't" },
+            { s: "Does she enjoy ________ creative stories in class?", c: ["writing", "write", "writes", "written"], a: "writing" }
+        ];
+
+        // Group State Objects to keep tracks isolated
+        const g1 = { id: 1, deck: g1Deck, index: 0, score: 0, hp: 100, timer: null, timeL: 15 };
+        const g2 = { id: 2, deck: g2Deck, index: 0, score: 0, hp: 100, timer: null, timeL: 15 };
+
+        function startSimultaneousGame() {
+            document.getElementById('start-screen').classList.add('hidden');
+            // Initialize game engines dynamically together
+            runEngine(g1);
+            runEngine(g2);
+        }
+
+        function runEngine(group) {
+            const prefix = `g${group.id}`;
+            
+            // Check terminal conditions
+            if (group.index >= group.deck.length || group.hp <= 0) {
+                clearInterval(group.timer);
+                document.getElementById(`${prefix}-timer`).innerText = "DONE";
+                document.getElementById(`${prefix}-options`).innerHTML = '';
+                document.getElementById(`${prefix}-question`).innerText = group.hp <= 0 ? "OUT OF HEALTH!" : "ALL SENTENCES COMPLETE!";
+                
+                // End game when both channels finish up
+                if ((g1.index >= 20 || g1.hp <= 0) && (g2.index >= 20 || g2.hp <= 0)) {
+                    determineFinalWinner();
+                }
+                return;
+            }
+
+            // UI Progress updates
+            document.getElementById(`${prefix}-progress`).innerText = group.index + 1;
+
+            // Reset engine timer tracking values
+            clearInterval(group.timer);
+            group.timeL = 15;
+            refreshClockUI(group);
+            
+            group.timer = setInterval(() => {
+                group.timeL--;
+                refreshClockUI(group);
+                if (group.timeL <= 0) {
+                    clearInterval(group.timer);
+                    applyDamagePenalty(group, true);
+                }
+            }, 1000);
+
+            // Populate text elements
+            let data = group.deck[group.index];
+            document.getElementById(`${prefix}-question`).innerText = data.s;
+
+            let grid = document.getElementById(`${prefix}-options`);
+            grid.innerHTML = '';
+            data.c.forEach(choice => {
+                let btn = document.createElement('button');
+                btn.className = 'btn';
+                btn.innerText = choice;
+                btn.onclick = () => verifySelection(group, choice);
+                grid.appendChild(btn);
+            });
+        }
+
+        function refreshClockUI(group) {
+            const prefix = `g${group.id}`;
+            document.getElementById(`${prefix}-timer`).innerText = group.timeL + "s";
+            document.getElementById(`${prefix}-timer-bar`).style.width = (group.timeL / 15) * 100 + "%";
+        }
+
+        function verifySelection(group, chosen) {
+            clearInterval(group.timer);
+            const prefix = `g${group.id}`;
+            let targetArea = document.getElementById(`area-${prefix}`);
+            let correctAns = group.deck[group.index].a;
+
+            if (chosen === correctAns) {
+                playSound('correct');
+                group.score++;
+                document.getElementById(`${prefix}-score`).innerText = group.score;
+                
+                targetArea.className = "gameplay-area flash-good";
+                setTimeout(() => targetArea.className = "gameplay-area", 400);
+                
+                group.index++;
+                runEngine(group);
+            } else {
+                applyDamagePenalty(group, false);
+            }
+        }
+
+        function applyDamagePenalty(group, isTimeout) {
+            playSound('incorrect');
+            const prefix = `g${group.id}`;
+            let targetArea = document.getElementById(`area-${prefix}`);
+
+            group.hp = Math.max(0, group.hp - 10); // Deduct 10 HP per mistake
+            document.getElementById(`${prefix}-hp`).style.width = group.hp + "%";
+
+            targetArea.className = "gameplay-area flash-bad";
+            setTimeout(() => targetArea.className = "gameplay-area", 400);
+
+            group.index++;
+            runEngine(group);
+        }
+
+        function determineFinalWinner() {
+            document.getElementById('game-over-screen').classList.remove('hidden');
+            let banner = document.getElementById('winner-text');
+            
+            // Winning Condition logic 
+            if (g1.score > g2.score) {
+                banner.innerText = "🏆 GROUP 1 VICTORIOUS! 🏆";
+                banner.style.color = "var(--g1-color)";
+            } else if (g2.score > g1.score) {
+                banner.innerText = "🏆 GROUP 2 VICTORIOUS! 🏆";
+                banner.style.color = "var(--g2-color)";
+            } else {
+                if (g1.hp > g2.hp) {
+                    banner.innerText = "🏆 GROUP 1 WINS ON HIGHER HEALTH VITALITY! 🏆";
+                    banner.style.color = "var(--g1-color)";
+                } else if (g2.hp > g1.hp) {
+                    banner.innerText = "🏆 GROUP 2 WINS ON HIGHER HEALTH VITALITY! 🏆";
+                    banner.style.color = "var(--g2-color)";
+                } else {
+                    banner.innerText = "🤝 DRAW BATTLE! TOTAL STANDOFF! 🤝";
+                    banner.style.color = "#fff";
+                }
+            }
+
+            document.getElementById('final-stats').innerHTML = `
+                Group 1 Score: <strong>${g1.score}/20</strong> (Endurance: ${g1.hp}%)<br>
+                Group 2 Score: <strong>${g2.score}/20</strong> (Endurance: ${g2.hp}%)
+            `;
+        }
+    </script>
+</body>
+</html>
