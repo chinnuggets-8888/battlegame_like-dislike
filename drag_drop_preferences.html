@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How to Say You Like or Dislike</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #fdfaf2;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #d35400;
+            font-size: 2.5rem;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            text-align: center;
+        }
+
+        .instructions {
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+            color: #555;
+            text-align: center;
+        }
+
+        .translation {
+            font-size: 1rem;
+            font-style: italic;
+            color: #777;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        /* Game Board Layout */
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .faces-row {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-bottom: 50px;
+            position: relative;
+        }
+
+        /* Connecting dashed line behind items */
+        .faces-row::before {
+            content: '';
+            position: absolute;
+            top: 35%;
+            left: 10%;
+            right: 10%;
+            border-top: 2px dashed #1a2a6c;
+            z-index: 1;
+        }
+
+        .character-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 2;
+            width: 20%;
+        }
+
+        /* Stylized placeholders for the "faces" using SVG icons */
+        .face-visual {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Dropzones styled like the image */
+        .dropzone {
+            width: 140px;
+            height: 60px;
+            border: 2px dashed #1a2a6c;
+            border-radius: 12px;
+            background-color: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .dropzone.hovered {
+            background-color: rgba(26, 42, 108, 0.1);
+            border-style: solid;
+        }
+
+        /* Draggable options container */
+        .choices-row {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            width: 100%;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        /* Choice Pill styling based on image colors */
+        .choice {
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: white;
+            border-radius: 12px;
+            cursor: grab;
+            user-select: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+            min-width: 70px;
+        }
+
+        .choice:active {
+            cursor: grabbing;
+        }
+
+        /* Specific color themes from the image */
+        .bg-orange { background-color: #e65c23; }
+        .bg-teal { background-color: #439a97; }
+
+        /* Draggable item inside a dropzone adjustments */
+        .dropzone .choice {
+            margin: 0;
+            width: 80%;
+            padding: 10px 0;
+            box-shadow: none;
+            cursor: pointer;
+        }
+
+        /* Win Message */
+        #win-message {
+            margin-top: 30px;
+            font-size: 1.5rem;
+            color: #27ae60;
+            font-weight: bold;
+            display: none;
+            text-align: center;
+        }
+        
+        .reset-btn {
+            margin-top: 15px;
+            padding: 10px 20px;
+            background-color: #1a2a6c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <h1>How to Say You Like or Dislike</h1>
+        <div class="instructions">Drag the correct expression to these faces.</div>
+        <div class="translation">To'g'ri ifodani ushbu yuzlarga torting.</div>
+
+        <div class="faces-row">
+            <div class="character-card">
+                <div class="face-visual">
+                    <svg viewBox="0 0 100 100" width="90" height="90">
+                        <path d="M12,30 A20,20 0 0,1 50,30 A20,20 0 0,1 88,30 Q88,60 50,90 Q12,60 12,30 Z" fill="#f07865"/>
+                        <circle cx="38" cy="35" r="5" fill="#c0392b"/>
+                        <circle cx="62" cy="35" r="5" fill="#c0392b"/>
+                        <path d="M45,50 Q50,55 55,50" stroke="#c0392b" stroke-width="3" fill="none" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div class="dropzone" data-expected="love"></div>
+            </div>
+
+            <div class="character-card">
+                <div class="face-visual">
+                    <svg viewBox="0 0 100 100" width="90" height="90">
+                        <circle cx="50" cy="50" r="30" fill="#fcd04b"/>
+                        <path d="M50,10 L50,20 M50,80 L50,90 M10,50 L20,50 M80,50 L90,50 M22,22 L29,29 M71,71 L78,78 M22,78 L29,79 M71,22 L78,29" stroke="#fcd04b" stroke-width="6" stroke-linecap="round"/>
+                        <circle cx="42" cy="48" r="4" fill="#333"/>
+                        <circle cx="58" cy="48" r="4" fill="#333"/>
+                        <path d="M42,60 Q50,68 58,60" stroke="#333" stroke-width="3" fill="none" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div class="dropzone" data-expected="like"></div>
+            </div>
+
+            <div class="character-card">
+                <div class="face-visual">
+                    <svg viewBox="0 0 100 100" width="85" height="85">
+                        <polygon points="50,5 90,50 50,95 10,50" fill="#7d7bc4"/>
+                        <circle cx="38" cy="45" r="5" fill="#333"/>
+                        <circle cx="62" cy="45" r="5" fill="#333"/>
+                        <line x1="40" y1="62" x2="60" y2="62" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div class="dropzone" data-expected="dislike"></div>
+            </div>
+
+            <div class="character-card">
+                <div class="face-visual">
+                    <svg viewBox="0 0 100 100" width="90" height="90">
+                        <path d="M50,5 Q75,30 75,60 A25,25 0 0,1 25,60 Q25,30 50,5 Z" fill="#f37032"/>
+                        <path d="M50,25 Q65,45 65,65 A15,15 0 0,1 35,65 Q35,45 50,25 Z" fill="#fdcc0d"/>
+                        <path d="M35,50 L45,53 M65,50 L55,53" stroke="#333" stroke-width="3" stroke-linecap="round"/> 
+                        <circle cx="40" cy="58" r="4" fill="#333"/>
+                        <circle cx="60" cy="58" r="4" fill="#333"/>
+                        <path d="M42,70 Q50,62 58,70" stroke="#333" stroke-width="3" fill="none" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div class="dropzone" data-expected="hate"></div>
+            </div>
+        </div>
+
+        <div class="choices-row" id="choices-bank">
+            <div class="choice bg-orange" draggable="true" id="hate">hate</div>
+            <div class="choice bg-teal" draggable="true" id="love">love</div>
+            <div class="choice bg-orange" draggable="true" id="like">like</div>
+            <div class="choice bg-teal" draggable="true" id="dislike">dislike</div>
+        </div>
+
+        <div id="win-message">
+            🎉 Excellent! All answers are correct! <br>
+            <button class="reset-btn" onclick="resetGame()">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        const choices = document.querySelectorAll('.choice');
+        const dropzones = document.querySelectorAll('.dropzone');
+        const choicesBank = document.getElementById('choices-bank');
+        const winMessage = document.getElementById('win-message');
+
+        // Add Event Listeners to Draggable Items
+        choices.forEach(choice => {
+            choice.addEventListener('dragstart', dragStart);
+            choice.addEventListener('dragend', dragEnd);
+        });
+
+        // Add Event Listeners to Drop Targets
+        dropzones.forEach(zone => {
+            zone.addEventListener('dragover', dragOver);
+            zone.addEventListener('dragenter', dragEnter);
+            zone.addEventListener('dragleave', dragLeave);
+            zone.addEventListener('drop', dragDrop);
+        });
+
+        function dragStart(e) {
+            e.dataTransfer.setData('text/plain', e.target.id);
+            setTimeout(() => this.style.display = 'none', 0);
+        }
+
+        function dragEnd() {
+            this.style.display = 'block';
+            checkWinCondition();
+        }
+
+        function dragOver(e) {
+            e.preventDefault(); // Necessary to allow dropping
+        }
+
+        function dragEnter(e) {
+            e.preventDefault();
+            if (!this.hasChildNodes()) {
+                this.classList.add('hovered');
+            }
+        }
+
+        function dragLeave() {
+            this.classList.remove('hovered');
+        }
+
+        function dragDrop(e) {
+            this.classList.remove('hovered');
+            const id = e.dataTransfer.getData('text/plain');
+            const draggedElement = document.getElementById(id);
+
+            // Game Rule: Validate if it's the correct match
+            if (this.getAttribute('data-expected') === id) {
+                if (!this.hasChildNodes()) {
+                    this.appendChild(draggedElement);
+                    draggedElement.setAttribute('draggable', 'false'); // Lock it in place
+                    draggedElement.style.cursor = 'default';
+                }
+            } else {
+                // Flash red briefly on incorrect drop
+                this.style.borderColor = '#e74c3c';
+                setTimeout(() => this.style.borderColor = '#1a2a6c', 500);
+            }
+        }
+
+        // Verify if all four spaces are correctly answered
+        function checkWinCondition() {
+            let correctCount = 0;
+            dropzones.forEach(zone => {
+                if (zone.hasChildNodes() && zone.firstChild.id === zone.getAttribute('data-expected')) {
+                    correctCount++;
+                }
+            });
+
+            if (correctCount === 4) {
+                winMessage.style.display = 'block';
+            }
+        }
+
+        // Reset game configuration
+        function resetGame() {
+            dropzones.forEach(zone => {
+                if (zone.hasChildNodes()) {
+                    const child = zone.firstChild;
+                    child.setAttribute('draggable', 'true');
+                    child.style.cursor = 'grab';
+                    choicesBank.appendChild(child);
+                }
+            });
+            winMessage.style.display = 'none';
+            
+            // Optional: Reshuffle bank items visually
+            for (let i = choicesBank.children.length; i >= 0; i--) {
+                choicesBank.appendChild(choicesBank.children[Math.random() * i | 0]);
+            }
+        }
+    </script>
+</body>
+</html>
